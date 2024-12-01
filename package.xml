@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<package format="1">
+  <name>Archtop workbench</name>
+  <description>FreeCAD workbench for modelling archtop guitar top and back plates</description>
+  <version>0.0.1</version>
+  <maintainer email="cg@grellier.fr">Christophe Grellier</maintainer>
+  <license file="LICENSE">LGPL-2.1</license>
+  <url type="repository" branch="master">https://github.com/tomate44/Archtop</url>
+  <content>
+    <workbench>
+      <name>Archtop workbench</name>
+      <classname>ArchtopWorkbench</classname>
+      <description>FreeCAD workbench for modelling archtop guitar top and back plates</description>
+      <version>0.0.1</version>
+      <subdirectory>./</subdirectory>
+<!--      <icon>freecad/Curves/resources/icons/blendSurf.svg</icon>-->
+      <freecadmin>1.0.0</freecadmin>
+<!--      <depend>numpy</depend>
+      <depend>scipy</depend>-->
+      <tag>archtop</tag>
+      <tag>guitar</tag>
+    </workbench>
+  </content>
+
+</package>
