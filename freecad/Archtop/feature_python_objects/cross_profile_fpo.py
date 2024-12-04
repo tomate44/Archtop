@@ -6,14 +6,17 @@ __license__ = "LGPL 2.1"
 __doc__ = ""
 __usage__ = ""
 
-import os
-import FreeCAD
-import FreeCADGui
-import Part
-from freecad.Archtop import ICONPATH
+import FreeCADGui as Gui
+from .. import os, App, Icon_Path
+from ..lib.fpo import proxy, view_proxy
 
-TOOL_ICON = os.path.join(ICONPATH, 'icon.svg')
+TOOL_ICON = os.path.join(Icon_Path, "Archtop_CrossProfile.svg")
+
+@view_proxy(icon=TOOL_ICON)
+class CrossProfileViewProxy:
+    pass
 
 
-from freecad.Archtop.lib.fpo import proxy, PropertyLength, print_log
-
+@proxy(object_type="Part::FeaturePython", view_proxy=CrossProfileViewProxy)
+class CrossProfileProxy:
+    pass

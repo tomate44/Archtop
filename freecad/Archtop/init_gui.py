@@ -1,6 +1,6 @@
 import os
 import FreeCADGui as Gui
-from . import ICONPATH
+from . import Icon_Path
 
 
 class ArchtopWorkbench(Gui.Workbench):
@@ -9,25 +9,16 @@ class ArchtopWorkbench(Gui.Workbench):
     """
     MenuText = "Archtop"
     ToolTip = "FreeCAD workbench for modelling archtop guitar top and back plates"
-    Icon = os.path.join(ICONPATH, "icon.svg")
+    Icon = os.path.join(Icon_Path, "Archtop_WorkBench.svg")
     toolbox = []
 
     def Initialize(self):
         """This function is executed when FreeCAD starts"""
-        # TODO changes module names to lower_with_underscore
 
-        from . import lineFP
+        from . import commands
 
-        curvelist = ["Curves_line"]
-        surflist = []
-        misclist = []
-
-        self.appendToolbar("Curves", curvelist)
-        self.appendToolbar("Surfaces", surflist)
-        self.appendToolbar("Misc.", misclist)
-        self.appendMenu("Curves", curvelist)
-        self.appendMenu("Surfaces", surflist)
-        self.appendMenu("Misc.", misclist)
+        self.appendToolbar("Archtop", commands.Cmd_Names)
+        self.appendMenu("Archtop", commands.Cmd_Names)
 
     def Activated(self):
         """This function is executed when the workbench is activated"""
@@ -40,12 +31,6 @@ class ArchtopWorkbench(Gui.Workbench):
     def ContextMenu(self, recipient):
         """This is executed whenever the user right-clicks on screen.
         recipient" will be either 'view' or 'tree'"""
-        # if recipient == "View":
-        #     contextlist = ["Curves_adjacent_faces", "Curves_bspline_to_console"]  # list of commands
-        #     self.appendContextMenu("Curves", contextlist)
-        # elif recipient == "Tree":
-        #     contextlist = []  # list of commands
-        #     self.appendContextMenu("Curves", contextlist)
         return
 
     def GetClassName(self):

@@ -1,10 +1,14 @@
 import os
-import FreeCAD
+import FreeCAD as App
 
-ICONPATH = os.path.join(os.path.dirname(__file__), "resources", "icons")
+WB_Path = os.path.dirname(__file__)
+Icon_Path = os.path.join(WB_Path, "resources", "icons")
 
-TOL3D = 1e-7
-TOL2D = 1e-9
-if hasattr(FreeCAD.Base, "Precision"):
-    TOL3D = FreeCAD.Base.Precision.confusion()
-    TOL2D = FreeCAD.Base.Precision.parametric(TOL3D)
+Tol3D = 1e-7
+Tol2D = 1e-9
+if hasattr(App.Base, "Precision"):
+    Tol3D = App.Base.Precision.confusion()
+    Tol2D = App.Base.Precision.parametric(Tol3D)
+
+Vec3 = App.Vector
+Vec2 = App.Base.Vector2d
