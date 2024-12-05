@@ -22,7 +22,8 @@ class CmdBodyContour:
     Name = 'Archtop_BodyContour'
 
     def makeFeature(self, source):
-        fp = feat.ContourProxy.create(label='Contour')
+        featname = 'Contour'
+        fp = feat.ContourProxy.create(name=featname, label=featname)
         fp.Source = source
 
     def Activated(self):

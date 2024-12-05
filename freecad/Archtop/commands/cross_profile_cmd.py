@@ -8,8 +8,10 @@ __usage__ = "Select the body contour, the seam profile and activate the tool."
 
 
 import FreeCADGui as Gui
+import Part
 from .. import os, App, Icon_Path
-
+from ..feature_python_objects import cross_profile_fpo as feat
+from ..lib.fpo import print_err
 
 TOOL_ICON = os.path.join(Icon_Path, "Archtop_CrossProfile.svg")
 
@@ -19,12 +21,32 @@ class CmdCrossProfile:
 
     Name = 'Archtop_CrossProfile'
 
-    def makeFeature(self, source):
-        pass
+    def makeFeature(self):
+        featname = 'Cross Profile'
+        fp = feat.CrossProfileProxy.create(name=featname, label=featname)
+        return fp
 
     def Activated(self):
-        sel = Gui.Selection.getSelection()
+        sel = Gui.Selection.getSelectionEx()
+        if not len(sel) == 2:
+            print_err("Select Contour and Seam first")
+            return
         print(sel)
+        fp = self.makeFeature()
+        fp.Contour = [sel[0].Object, sel[0].SubElementNames[0]]
+        fp.Seam = sel[1].Object
+        # print(dir(fp))
+        App.ActiveDocument.recompute()
+        if sel[0].PickedPoints:
+            v = Part.Vertex(sel[0].PickedPoints[0])
+            dist, pts, info = sel[0].Object.Shape.distToShape(v)
+            if info[0][0] == "Edge":
+                fp.ContourParam = info[0][2]
+        if sel[1].PickedPoints:
+            v = Part.Vertex(sel[1].PickedPoints[0])
+            dist, pts, info = sel[1].Object.Shape.distToShape(v)
+            if info[0][0] == "Edge":
+                fp.SeamParam = info[0][2]
 
     def IsActive(self):
         if App.ActiveDocument:

@@ -1,5 +1,6 @@
 import os
 import FreeCAD as App
+from importlib import reload
 
 WB_Path = os.path.dirname(__file__)
 Icon_Path = os.path.join(WB_Path, "resources", "icons")

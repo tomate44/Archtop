@@ -22,7 +22,8 @@ class CmdSeamProfile:
     Name = 'Archtop_SeamProfile'
 
     def makeFeature(self, source):
-        fp = feat.SeamProfileProxy.create(label='Seam Profile')
+        featname = 'Seam Profile'
+        fp = feat.SeamProfileProxy.create(name=featname, label=featname)
         fp.Contour = source
 
     def Activated(self):
