@@ -25,6 +25,14 @@ class CmdSeamProfile:
         featname = 'Seam Profile'
         fp = feat.SeamProfileProxy.create(name=featname, label=featname)
         fp.Contour = source
+        if hasattr(source, "BindingSize"):
+            fp.setExpression('BindingSize', f'{source.Name}.BindingSize')
+        if hasattr(source, "GutterWidth"):
+            fp.setExpression('TopGutterWidth', f'{source.Name}.GutterWidth')
+            fp.setExpression('BottomGutterWidth', f'{source.Name}.GutterWidth')
+        if hasattr(source, "GutterDepth"):
+            fp.setExpression('TopGutterDepth', f'{source.Name}.GutterDepth')
+            fp.setExpression('BottomGutterDepth', f'{source.Name}.GutterDepth')
 
     def Activated(self):
         sel = Gui.Selection.getSelection()

@@ -10,7 +10,11 @@ __usage__ = "Select the body contour edges and activate the tool."
 # import FreeCADGui as Gui
 import Part
 from .. import os, Icon_Path
-from ..lib.fpo import print_err, proxy, view_proxy, PropertyLinkList
+from ..lib.fpo import (print_err,
+                       proxy,
+                       view_proxy,
+                       PropertyLinkList,
+                       PropertyLength)
 
 TOOL_ICON = os.path.join(Icon_Path, "Archtop_BodyContour.svg")
 
@@ -42,6 +46,15 @@ class ContourViewProxy:
 class ContourProxy:
     Source = PropertyLinkList(section="Source",
                               description="Objects that define the contour")
+    Binding_Size = PropertyLength(section="Contour",
+                                  default=3.0,
+                                  description="Width of the binding")
+    Gutter_Width = PropertyLength(section="Contour",
+                                  default=30.0,
+                                  description="Global width of the gutter")
+    Gutter_Depth = PropertyLength(section="Contour",
+                                  default=2.0,
+                                  description="Global depth of the gutter")
 
     # Ensure execution by the first time
     def on_create(self, obj):

@@ -31,6 +31,9 @@ class SeamProfileProxy:
     Contour = PropertyLink(section="Source",
                            default=None,
                            description="Object that define the contour")
+    Binding_Size = PropertyLength(section="SeamProfile",
+                                  default=3.0,
+                                  description="Width of the binding")
     Top_Gutter_Width = PropertyLength(section="SeamProfile",
                                       default=30,
                                       description="Width of the gutter at top end")

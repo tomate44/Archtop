@@ -33,9 +33,16 @@ class CmdCrossProfile:
             return
         print(sel)
         fp = self.makeFeature()
-        fp.Contour = [sel[0].Object, sel[0].SubElementNames[0]]
+        contour = sel[0].Object
+        fp.Contour = [contour, sel[0].SubElementNames[0]]
         fp.Seam = sel[1].Object
         # print(dir(fp))
+        if hasattr(contour, "BindingSize"):
+            fp.setExpression('BindingSize', f'{contour.Name}.BindingSize')
+        if hasattr(contour, "GutterWidth"):
+            fp.setExpression('GutterWidth', f'{contour.Name}.GutterWidth')
+        if hasattr(contour, "GutterDepth"):
+            fp.setExpression('GutterDepth', f'{contour.Name}.GutterDepth')
         App.ActiveDocument.recompute()
         if sel[0].PickedPoints:
             v = Part.Vertex(sel[0].PickedPoints[0])
@@ -47,6 +54,7 @@ class CmdCrossProfile:
             dist, pts, info = sel[1].Object.Shape.distToShape(v)
             if info[0][0] == "Edge":
                 fp.SeamParam = info[0][2]
+                fp.Horizontal = False
 
     def IsActive(self):
         if App.ActiveDocument:
