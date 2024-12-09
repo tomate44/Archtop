@@ -65,6 +65,8 @@ class SeamProfileProxy:
             self.on_execute(fpo)
 
     def on_execute(self, obj):
+        if not obj.Contour:
+            return
         reload(seam_profile)
         contour = self.Contour.Shape
         prof = seam_profile.SeamProfile(contour)

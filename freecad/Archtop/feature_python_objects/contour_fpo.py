@@ -65,6 +65,8 @@ class ContourProxy:
             self.on_execute(fpo)
 
     def get_contour_wire(self, obj):
+        if not obj.Source:
+            return
         edges = []
         for o in self.Source:
             edges.extend(o.Shape.Edges)

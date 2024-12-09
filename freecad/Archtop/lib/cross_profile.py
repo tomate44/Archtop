@@ -3,36 +3,48 @@ from .fpo import print_err
 import Part
 
 
+class ProfileCS:
+    def __init__(self, x, y, n):
+        self.x_pt = x
+        self.y_pt = y
+        self.normal = n
+        line = Part.Line()
+        line.Location = self.y_pt
+        line.Direction = self.normal
+        self.origin = line.projectPoint(self.x_pt)
+        self.x_vec = self.x_pt - self.origin
+
+    def __repr__(self):
+        def vec_repr(v):
+            vals = [f"{val:.3f}" for val in v]
+            return ", ".join(vals)
+        vecs = [self.origin, self.x_pt, self.y_pt]
+        return "ProfileCS\n" + "\n".join([vec_repr(v) for v in vecs])
+
+
 class CrossProfile:
-    def __init__(self, contour, seam):
-        self.contour = contour
-        self.seam = seam
-        self.contour_param = 0.5
-        self.seam_param = 0.0
+    def __init__(self, contour, par1, seam, par2=None):
+        self.contour = contour  # Edge
+        self.seam = seam  # Shape
+        self.contour_param = par1
+        self.seam_param = par2
         self.gutter_width = 30.0
         self.gutter_depth = 1.5
         self.apex_strength = 1.5
 
     def get_shape(self):
-        top = self.contour.Vertex1.Point
-        bottom = self.contour.Vertexes[-1].Point
-        height = top.distanceToPoint(bottom)
-        if top.y < bottom.y:
-            top, bottom = bottom, top
-        axis = Part.makeLine(top, bottom)
-        x = self.contour.valueAt(self.contour_param)
-            # tan = self.seam
-        if self.seam_param == 0.0:
-            pl = Part.Plane(x, axis.Curve.Direction)
-            y = pl.intersect(self.seam.Edge1.Curve)[0][0].toShape().Point
-            o = pl.intersect(axis.Curve)[0][0].toShape().Point
+        x_pt = self.contour.valueAt(self.contour_param)
+        if self.seam_param is None:
+            pl = Part.Plane(x_pt, Vec3(0, 1, 0))
+            y_pt = pl.intersect(self.seam.Edge1.Curve)[0][0].toShape().Point
+            par = self.seam.Edge1.Curve.parameter(y_pt)
+            norm = self.seam.Edge1.normalAt(par)
         else:
-            y = self.seam.valueAt(self.seam_param)
-            n = self.seam.normalAt(self.seam_param)
-            pl = Part.Plane(y, (n).cross(x - y))
-            o = pl.intersect(axis.Curve)[0][0].toShape().Point
-        print(o, x, y)
-        bs = self.get_profile(o, x, y)
+            y_pt = self.seam.Edge1.valueAt(self.seam_param)
+            norm = self.seam.Edge1.normalAt(self.seam_param)
+        cs = ProfileCS(x_pt, y_pt, norm)
+        print(cs)
+        bs = self.get_profile(cs)
         self.bspline_tweak(bs)
         # return Part.makePolygon([x, o, y])
         return bs.toShape()
@@ -46,19 +58,21 @@ class CrossProfile:
         bs.setPole(3, p4 + p34 / self.apex_strength)
         return bs
 
-    def get_profile(self, o, x, y):
-        chord = x - o
-        sign = 1
-        if chord.x < 0:
-            sign = -1
-        gwidth = chord.Length
-        pts = [y]
-        pts.append(o + Vec3(chord.x - sign * self.gutter_width, 0.0, 0.0))
-        pts.append(o + Vec3(chord.x - sign * self.gutter_width / 2, 0.0, -self.gutter_depth))
-        pts.append(x)
-        tan = [chord] * len(pts)
+    def get_profile(self, cs):
+        print(cs.x_vec)
+        x = Vec3(cs.x_vec)
+        x.normalize()
+        gutter_vec = x * self.gutter_width
+        pts = [cs.y_pt]
+        pts.append(cs.origin + cs.x_vec - gutter_vec)
+        pts.append(cs.origin + cs.x_vec - gutter_vec / 2 - Vec3(0, 0, self.gutter_depth))
+        pts.append(cs.x_pt)
+        tan = [x] * len(pts)
         flags = [True, False, True, False]
-        pars = [sign * p.x for p in pts]
+        line = Part.Line()
+        line.Location = cs.origin
+        line.Direction = x
+        pars = [line.parameter(p) for p in pts]
         # pars = [pow(p, 1.5) for p in pars]
 #		if pars[1] < pars[0]:
 #			pars = pars[::-1]
