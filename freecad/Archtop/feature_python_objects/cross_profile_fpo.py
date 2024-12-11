@@ -65,14 +65,14 @@ class CrossProfileProxy:
             self.on_execute(fpo)
 
     def on_execute(self, obj):
-        if not obj.Contour and obj.Seam:
+        if not (obj.Contour and obj.Seam):
             return
         reload(cross_profile)
         contour = self.Contour[0].getSubObject(self.Contour[1])[0]
         print(contour)
-        seam = self.Seam.Shape
         par1 = self.Contour_Param
         par2 = self.Seam_Param
+        seam = self.Seam.Shape
         if par2 == 0.0:
             par2 = None
         prof = cross_profile.CrossProfile(contour, par1, seam, par2)

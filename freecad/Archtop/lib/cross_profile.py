@@ -8,11 +8,14 @@ class ProfileCS:
         self.x_pt = x
         self.y_pt = y
         self.normal = n
-        line = Part.Line()
-        line.Location = self.y_pt
-        line.Direction = self.normal
-        self.origin = line.projectPoint(self.x_pt)
+        self.origin = Vec3(self.y_pt.x, self.y_pt.y, 0)  # line.projectPoint(self.x_pt)
         self.x_vec = self.x_pt - self.origin
+        self.tangent_plane = Part.Plane(y, n)
+        # self.tangent_plane.Position = y
+        # self.tangent_plane.Axis = n
+        # line = Part.Line()
+        # line.Location = self.y_pt
+        # line.Direction = self.normal
 
     def __repr__(self):
         def vec_repr(v):
@@ -21,6 +24,8 @@ class ProfileCS:
         vecs = [self.origin, self.x_pt, self.y_pt]
         return "ProfileCS\n" + "\n".join([vec_repr(v) for v in vecs])
 
+    def isValid(self):
+        return (self.x_vec.Length > 0) and (self.normal.Length > 0)
 
 class CrossProfile:
     def __init__(self, contour, par1, seam, par2=None):
@@ -44,6 +49,8 @@ class CrossProfile:
             norm = self.seam.Edge1.normalAt(self.seam_param)
         cs = ProfileCS(x_pt, y_pt, norm)
         print(cs)
+        if not cs.isValid():
+            return Part.Shape()
         bs = self.get_profile(cs)
         self.bspline_tweak(bs)
         # return Part.makePolygon([x, o, y])
@@ -64,10 +71,12 @@ class CrossProfile:
         x.normalize()
         gutter_vec = x * self.gutter_width
         pts = [cs.y_pt]
-        pts.append(cs.origin + cs.x_vec - gutter_vec)
-        pts.append(cs.origin + cs.x_vec - gutter_vec / 2 - Vec3(0, 0, self.gutter_depth))
+        proj = cs.tangent_plane.projectPoint(cs.y_pt + cs.x_vec)
+        start_tan = proj - cs.y_pt
+        pts.append(cs.x_pt - gutter_vec)
+        pts.append(cs.x_pt - gutter_vec / 2 - Vec3(0, 0, self.gutter_depth))
         pts.append(cs.x_pt)
-        tan = [x] * len(pts)
+        tan = [start_tan, Vec3(), x, Vec3()]
         flags = [True, False, True, False]
         line = Part.Line()
         line.Location = cs.origin
