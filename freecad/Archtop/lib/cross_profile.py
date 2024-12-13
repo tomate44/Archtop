@@ -1,5 +1,6 @@
 from .. import App, Vec3
 from .fpo import print_err
+from .interpolation import PointInterpolation
 import Part
 
 
@@ -88,4 +89,12 @@ class CrossProfile:
         print(pars)
         bs = Part.BSplineCurve()
         bs.interpolate(Points=pts, Parameters=pars, Tangents=tan, TangentFlags=flags)
+
+        pi = PointInterpolation(pts)
+        pi.Parameters = pars
+        pi.Derivatives = [start_tan, None, x, None]
+        pi.interpolate(3)
+
+
+
         return bs
