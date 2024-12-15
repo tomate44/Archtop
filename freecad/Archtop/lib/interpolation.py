@@ -171,49 +171,53 @@ class PointInterpolation:
         return params
 
     def interpolate(self, degree=3):
+        nb_pts = len(self.Points)
         nb_der = len([d for d in self.Derivatives if d is not None])
         nb_cp = len(self.Points) + nb_der
         nb_inner_knots = nb_cp - degree - 1
         if self.Parameters is None:
             self.Parameters = self.get_parameters(0.5)
-        add_knots = []
-        n = 0
+        knots = self.Parameters
+        n = len(knots)
         for i in range(len(self.Derivatives)):
-            if n == nb_inner_knots:
+            if n == (nb_inner_knots + 2):
                 break
             if self.Derivatives[i] is not None:
                 k = 0.5 * (self.Parameters[i] + self.Parameters[i + 1])
-                add_knots.append(k)
+                knots.append(k)
                 n += 1
-        knots = self.Parameters + add_knots
+        # knots = self.Parameters  #  + add_knots
         knots.sort()
-        print(knots)
+        flatknots = [knots[0]] * (degree + 1)
+        flatknots += knots[1:-1]
+        flatknots += [knots[-1]] * (degree + 1)
+        # print(flatknots)
 
         lhs = np.array([[0.] * (nb_cp) for i in range(nb_cp)])
         rhsx = np.array([0.] * nb_cp)
         rhsy = np.array([0.] * nb_cp)
         rhsz = np.array([0.] * nb_cp)
 
-        dx = np.array([0.] * nb_cp)
-        dy = np.array([0.] * nb_cp)
-        dz = np.array([0.] * nb_cp)
+        bb = BsplineBasis()
+        bb.knots = flatknots
+        bb.degree = degree
 
-        for idx in range(nb_cp):
-            dx[idx] = self.Points[idx].x
-            dy[idx] = self.Points[idx].y
-            dz[idx] = self.Points[idx].z
+        i = 0
+        for idx in range(len(self.Points)):
+            rhsx[i] = self.Points[idx].x
+            rhsy[i] = self.Points[idx].y
+            rhsz[i] = self.Points[idx].z
+            bbeval = bb.evaluate(self.Parameters[idx], 0)
+            # print(bbeval)
+            lhs[i] = bbeval
+            i += 1
             if self.Derivatives[idx] is not None:
-                idx += 1
-                dx[idx] = self.Derivatives[idx].x
-                dy[idx] = self.Derivatives[idx].y
-                dz[idx] = self.Derivatives[idx].z
-
-        C = bsplineBasisMat(self.degree, knots, interpParams, 0)
-        Ct = C.T
-        for i in range(nCtrPnts):
-            for j in range(n_intpolated):
-                lhs[i][j + nCtrPnts] = Ct[i][j]
-                lhs[j + nCtrPnts][i] = C[j][i]
+                rhsx[i] = self.Derivatives[idx].x
+                rhsy[i] = self.Derivatives[idx].y
+                rhsz[i] = self.Derivatives[idx].z
+                lhs[i] = bb.evaluate(self.Parameters[idx], 1)
+                # print(lhs[i])
+                i += 1
 
         try:
             cp_x = np.linalg.solve(lhs, rhsx)
@@ -230,4 +234,7 @@ class PointInterpolation:
         # debug("{} mults : {}".format(len(mults), mults))
         # debug("degree : {}".format(self.degree))
         # debug("conti : {}".format(self.C2Continuous))
+        # setlist = list(set(knots))
+        mults = [flatknots.count(k) for k in knots]
         result.buildFromPolesMultsKnots(poles, mults, knots, self.Periodic, degree)
+        return result

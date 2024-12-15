@@ -1,6 +1,7 @@
 from .. import App, Vec3
 from .fpo import print_err
-from .interpolation import PointInterpolation
+from importlib import reload
+from . import interpolation
 import Part
 
 
@@ -53,7 +54,7 @@ class CrossProfile:
         if not cs.isValid():
             return Part.Shape()
         bs = self.get_profile(cs)
-        self.bspline_tweak(bs)
+        # self.bspline_tweak(bs)
         # return Part.makePolygon([x, o, y])
         return bs.toShape()
 
@@ -90,10 +91,11 @@ class CrossProfile:
         bs = Part.BSplineCurve()
         bs.interpolate(Points=pts, Parameters=pars, Tangents=tan, TangentFlags=flags)
 
-        pi = PointInterpolation(pts)
+        reload(interpolation)
+        pi = interpolation.PointInterpolation(pts)
         pi.Parameters = pars
-        pi.Derivatives = [start_tan, None, x, None]
-        pi.interpolate(3)
+        pi.Derivatives = [start_tan.normalize() * self.apex_strength, None, x.normalize(), None]
+        bs = pi.interpolate(3)
 
 
 
