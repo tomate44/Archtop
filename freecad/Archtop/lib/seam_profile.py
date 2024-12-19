@@ -42,6 +42,7 @@ class SeamProfile:
         bs = Part.BSplineCurve()
         try:
             bs.interpolate(Points=pts, Parameters=pars, Tangents=tan, TangentFlags=flags)
+            bs.scaleKnotsToBounds(0.0, 100.0)
         except Part.OCCError:
             print_err(pars)
             poly = Part.makePolygon(pts)

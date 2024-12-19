@@ -40,15 +40,15 @@ class CrossProfile:
         self.apex_strength = 1.5
 
     def get_shape(self):
-        x_pt = self.contour.valueAt(self.contour_param)
+        x_pt = self.contour.Curve.value(self.contour_param)
         if self.seam_param is None:
             pl = Part.Plane(x_pt, Vec3(0, 1, 0))
             y_pt = pl.intersect(self.seam.Edge1.Curve)[0][0].toShape().Point
             par = self.seam.Edge1.Curve.parameter(y_pt)
             norm = self.seam.Edge1.normalAt(par)
         else:
-            y_pt = self.seam.Edge1.valueAt(self.seam_param)
-            norm = self.seam.Edge1.normalAt(self.seam_param)
+            y_pt = self.seam.Edge1.Curve.value(self.seam_param)
+            norm = self.seam.Edge1.Curve.normal(self.seam_param)
         cs = ProfileCS(x_pt, y_pt, norm)
         print(cs)
         if not cs.isValid():
@@ -93,7 +93,8 @@ class CrossProfile:
 
         reload(interpolation)
         pi = interpolation.PointInterpolation(pts)
-        pi.Parameters = pars
+        # pi.Periodic = True
+        pi.Parameters = pars  # + [300]
         pi.Derivatives = [start_tan.normalize() * self.apex_strength, None, x.normalize(), None]
         bs = pi.interpolate(3)
 

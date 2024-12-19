@@ -128,29 +128,26 @@ class BsplineBasis:
         return f
 
 
-def bsplineBasisMat(degree, knots, params, derivOrder):
-    """Return a matrix of values of BSpline Basis functions(or derivatives)"""
-    ncp = len(knots) - degree - 1
-    mx = np.array([[0.] * ncp for i in range(len(params))])
-    bspl_basis = np.array([[0.] * (ncp) for i in range(derivOrder + 1)])
-    for iparm in range(len(params)):
-        basis_start_index = 0
-        bb = BsplineBasis()
-        bb.knots = knots
-        bb.degree = degree
-        for irow in range(derivOrder + 1):
-            bspl_basis[irow] = bb.evaluate(params[iparm], d=irow)
-        for i in range(len(bspl_basis[derivOrder])):
-            mx[iparm][basis_start_index + i] = bspl_basis[derivOrder][i]
-    return mx
-
-
 class PointInterpolation:
     def __init__(self, pts):
         self.Points = pts
         self.Periodic = False
         self.Derivatives = [None] * len(pts)
         self.Parameters = None
+
+    @property
+    def NbPoints(self):
+        return len(self.Points)
+
+    @property
+    def NbDerivs(self):
+        return len([d for d in self.Derivatives if d is not None])
+
+    @property
+    def NbPoles(self):
+        if self.Periodic:
+            return self.NbPoints + self.NbDerivs + 1
+        return self.NbPoints + self.NbDerivs
 
     def get_parameters(self, fac=1):
         # Computes a knot Sequence for a set of points
@@ -170,33 +167,98 @@ class PointInterpolation:
             params.append(params[-1] + pl)
         return params
 
-    def interpolate(self, degree=3):
-        nb_pts = len(self.Points)
-        nb_der = len([d for d in self.Derivatives if d is not None])
-        nb_cp = len(self.Points) + nb_der
-        nb_inner_knots = nb_cp - degree - 1
-        if self.Parameters is None:
-            self.Parameters = self.get_parameters(0.5)
-        knots = self.Parameters
-        n = len(knots)
-        for i in range(len(self.Derivatives)):
-            if n == (nb_inner_knots + 2):
-                break
-            if self.Derivatives[i] is not None:
-                k = 0.5 * (self.Parameters[i] + self.Parameters[i + 1])
-                knots.append(k)
-                n += 1
-        # knots = self.Parameters  #  + add_knots
-        knots.sort()
+    def get_flatknots(self, degree, knots, mults=None):
+        if mults is not None:
+            flatknots = []
+            for i in range(len(knots)):
+                flatknots += [knots[i]] * mults[i]
+        else:
+            flatknots = knots
+        return flatknots
+
+    def clamp_knots(self, degree, knots):
         flatknots = [knots[0]] * (degree + 1)
         flatknots += knots[1:-1]
         flatknots += [knots[-1]] * (degree + 1)
-        # print(flatknots)
+        return flatknots
 
-        lhs = np.array([[0.] * (nb_cp) for i in range(nb_cp)])
-        rhsx = np.array([0.] * nb_cp)
-        rhsy = np.array([0.] * nb_cp)
-        rhsz = np.array([0.] * nb_cp)
+    def compute_knots(self, degree):
+        if self.Periodic:
+            nb_knots = self.NbPoles
+        else:
+            nb_knots = self.NbPoles - 2
+        print(f"Nb Knots : {nb_knots}")
+        if nb_knots == len(self.Parameters):
+            return self.clamp_knots(degree, self.Parameters)
+        params = []
+        ders = self.Parameters[::]
+        if self.Periodic:
+            ders += [self.Derivatives[0]]
+        for i in range(len(self.Parameters)):
+            params.append(self.Parameters[i])
+            if ders[i] is not None:
+                params.append(self.Parameters[i])
+        nb_intervals = len(params) - 1
+        step = nb_intervals / (nb_knots - 1)
+        print(f"Params : {params}")
+        print(f"Step : {step}")
+        knots = []
+        for i in range(nb_knots - 1):
+            v = i * step
+            idx = int(v)
+            fv = v - idx
+            par1 = params[idx]
+            par2 = params[idx + 1]
+            k = ((1 - fv) * par1) + (fv * par2)
+            knots.append(k)
+        knots.append(params[-1])
+        if self.Periodic:
+            return knots
+        return self.clamp_knots(degree, knots)
+
+    def check_knots(self, degree, flatknots):
+        if self.Periodic:
+            return self.NbPoles == sum(flatknots)
+        print(f"\nPeriodic : {self.Periodic}")
+        print(f"Nb Poles : {self.NbPoles}")
+        print(f"Parameters : {self.Parameters}")
+        print(f"Flat knots : {flatknots}")
+        if self.NbPoles == (len(flatknots) - degree - 1):
+            print("Flat knot sequence is valid")
+            return True
+        return False
+
+    def interpolate(self, degree=3, knots=None, mults=None):
+        if self.Parameters is None:
+            self.Parameters = self.get_parameters(1.0)
+        if knots is None:
+            flatknots = self.compute_knots(degree)
+        else:
+            flatknots = self.get_flatknots(knots, mults)
+        valid = self.check_knots(degree, flatknots)  # indent this line once compute_knots is working fine.
+        if not valid:
+            return
+
+        # knots = self.Parameters
+        # n = len(knots)
+        # for i in range(len(self.Derivatives)):
+        #     if n == (nb_inner_knots + 2):
+        #         break
+        #     if self.Derivatives[i] is not None:
+        #         k = 0.5 * (self.Parameters[i] + self.Parameters[i + 1])
+        #         knots.append(k)
+        #         n += 1
+        # # knots = self.Parameters  #  + add_knots
+        # knots.sort()
+        # flatknots = [knots[0]] * (degree + 1)
+        # flatknots += knots[1:-1]
+        # flatknots += [knots[-1]] * (degree + 1)
+        # # print(flatknots)
+
+        lhs = np.array([[0.] * (self.NbPoles) for i in range(self.NbPoles)])
+        rhsx = np.array([0.] * self.NbPoles)
+        rhsy = np.array([0.] * self.NbPoles)
+        rhsz = np.array([0.] * self.NbPoles)
 
         bb = BsplineBasis()
         bb.knots = flatknots
@@ -227,14 +289,16 @@ class PointInterpolation:
             print_err("Numpy linalg solver failed\n")
             return None
 
-        poles = [Vec3(cp_x[i], cp_y[i], cp_z[i]) for i in range(nb_cp)]
+        poles = [Vec3(cp_x[i], cp_y[i], cp_z[i]) for i in range(self.NbPoles)]
         result = Part.BSplineCurve()
         # debug("{} poles : {}".format(len(poles), poles))
         # debug("{} knots : {}".format(len(knots), knots))
         # debug("{} mults : {}".format(len(mults), mults))
         # debug("degree : {}".format(self.degree))
         # debug("conti : {}".format(self.C2Continuous))
-        # setlist = list(set(knots))
+        knots = list(set(flatknots))
+        knots.sort()
         mults = [flatknots.count(k) for k in knots]
+        print(mults)
         result.buildFromPolesMultsKnots(poles, mults, knots, self.Periodic, degree)
         return result

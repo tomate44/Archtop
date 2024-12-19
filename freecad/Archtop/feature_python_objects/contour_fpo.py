@@ -8,6 +8,7 @@ __usage__ = "Select the body contour edges and activate the tool."
 
 
 # import FreeCADGui as Gui
+from importlib import reload
 import Part
 from .. import os, Icon_Path
 from ..lib.fpo import (print_err,
@@ -15,6 +16,7 @@ from ..lib.fpo import (print_err,
                        view_proxy,
                        PropertyLinkList,
                        PropertyLength)
+from ..lib import contour
 
 TOOL_ICON = os.path.join(Icon_Path, "Archtop_BodyContour.svg")
 
@@ -67,20 +69,20 @@ class ContourProxy:
     def get_contour_wire(self, obj):
         if not obj.Source:
             return
-        edges = []
+        shapes = []
         for o in self.Source:
-            edges.extend(o.Shape.Edges)
-        if len(edges) == 0:
-            print_err("No source contour")
-            return Part.Shape()
-        sorted_edges = Part.sortEdges(edges)
-        if len(sorted_edges) > 1:
-            print_err("Edges don't form a closed contour")
-            return Part.Shape()
-        wire = Part.Wire(sorted_edges[0])
-        if not wire.isClosed():
-            print_err("Edges don't form a closed contour")
-        return wire
+            shapes.append(o.Shape)
+        reload(contour)
+        body = contour.Contour(shapes)
+        return body.contour
+        # sorted_edges = Part.sortEdges(edges)
+        # if len(sorted_edges) > 1:
+        #     print_err("Edges don't form a closed contour")
+        #     return Part.Shape()
+        # wire = Part.Wire(sorted_edges[0])
+        # if not wire.isClosed():
+        #     print_err("Edges don't form a closed contour")
+        # return wire
 
     # Update the shape
     def on_execute(self, obj):
