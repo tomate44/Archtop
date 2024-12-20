@@ -15,7 +15,8 @@ from ..lib.fpo import (print_err,
                        proxy,
                        view_proxy,
                        PropertyLinkList,
-                       PropertyLength)
+                       PropertyLength,
+                       PropertyBool)
 from ..lib import contour
 
 TOOL_ICON = os.path.join(Icon_Path, "Archtop_BodyContour.svg")
@@ -57,6 +58,9 @@ class ContourProxy:
     Gutter_Depth = PropertyLength(section="Contour",
                                   default=2.0,
                                   description="Global depth of the gutter")
+    Flat_Gutter = PropertyBool(section="Contour",
+                               default=False,
+                               description="Flatten the gutter")
 
     # Ensure execution by the first time
     def on_create(self, obj):

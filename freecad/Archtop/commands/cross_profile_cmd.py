@@ -43,6 +43,8 @@ class CmdCrossProfile:
             fp.setExpression('GutterWidth', f'{contour.Name}.GutterWidth')
         if hasattr(contour, "GutterDepth"):
             fp.setExpression('GutterDepth', f'{contour.Name}.GutterDepth')
+        if hasattr(contour, "FlatGutter"):
+            fp.setExpression('FlatGutter', f'{contour.Name}.FlatGutter')
         App.ActiveDocument.recompute()
         if sel[0].PickedPoints:
             v = Part.Vertex(sel[0].PickedPoints[0])

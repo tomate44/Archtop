@@ -54,14 +54,19 @@ class CrossProfileProxy:
     Apex_Strength = PropertyFloat(section="CrossProfile",
                                   default=1.5,
                                   description="Strength of the apex point")
+    Flat_Gutter = PropertyBool(section="CrossProfile",
+                               default=False,
+                               description="Flatten the gutter")
 
     # Ensure execution by the first time
     def on_create(self, obj):
         pass  # self.on_execute(obj)
 
     def on_change(self, fpo, prop, new_value, old_value):
-        return
-        if prop in ("Contour", "Seam"):
+        if prop in ("Contour",
+                    "Seam",
+                    "Contour_Param",
+                    "Seam_Param"):
             self.on_execute(fpo)
 
     def on_execute(self, obj):
@@ -81,4 +86,4 @@ class CrossProfileProxy:
         prof.gutter_width = self.Gutter_Width
         prof.gutter_depth = self.Gutter_Depth
         prof.apex_strength = self.Apex_Strength
-        obj.Shape = prof.get_shape()
+        obj.Shape = prof.get_shape(self.Flat_Gutter)

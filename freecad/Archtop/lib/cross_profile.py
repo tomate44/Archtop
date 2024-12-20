@@ -29,6 +29,7 @@ class ProfileCS:
     def isValid(self):
         return (self.x_vec.Length > 0) and (self.normal.Length > 0)
 
+
 class CrossProfile:
     def __init__(self, contour, par1, seam, par2=None):
         self.contour = contour  # Edge
@@ -39,7 +40,7 @@ class CrossProfile:
         self.gutter_depth = 1.5
         self.apex_strength = 1.5
 
-    def get_shape(self):
+    def get_shape(self, flat=False):
         x_pt = self.contour.Curve.value(self.contour_param)
         if self.seam_param is None:
             pl = Part.Plane(x_pt, Vec3(0, 1, 0))
@@ -54,50 +55,42 @@ class CrossProfile:
         if not cs.isValid():
             return Part.Shape()
         bs = self.get_profile(cs)
-        # self.bspline_tweak(bs)
-        # return Part.makePolygon([x, o, y])
+        if flat:
+            bs.increaseMultiplicity(2, 3)
+            pl = Part.Plane(cs.origin, Vec3(0, 0, 1))
+            for i in range(4, bs.NbPoles):
+                p = bs.getPole(i + 1)
+                np = pl.projectPoint(p)
+                bs.setPole(i + 1, np)
         return bs.toShape()
 
-    def bspline_tweak(self, bs):
-        pts = bs.getPoles()
-        p1, p2, p3, p4 = pts[:4]
-        p12 = p2 - p1
-        p34 = p3 - p4
-        bs.setPole(2, p1 + p12 * self.apex_strength)
-        bs.setPole(3, p4 + p34 / self.apex_strength)
-        return bs
-
     def get_profile(self, cs):
-        print(cs.x_vec)
-        x = Vec3(cs.x_vec)
+        off = self.contour.makeOffset2D(-self.gutter_width, 0, False, True , False)
+        lineseg = Part.makeLine(cs.origin, cs.x_pt)
+        dist, pts, info = lineseg.distToShape(off)
+        gutter_vec = cs.x_pt - pts[0][0]
+        x = Vec3(gutter_vec)
         x.normalize()
-        gutter_vec = x * self.gutter_width
+        # gutter_vec = x * self.gutter_width
         pts = [cs.y_pt]
         proj = cs.tangent_plane.projectPoint(cs.y_pt + cs.x_vec)
         start_tan = proj - cs.y_pt
         pts.append(cs.x_pt - gutter_vec)
         pts.append(cs.x_pt - gutter_vec / 2 - Vec3(0, 0, self.gutter_depth))
         pts.append(cs.x_pt)
-        tan = [start_tan, Vec3(), x, Vec3()]
-        flags = [True, False, True, False]
         line = Part.Line()
         line.Location = cs.origin
         line.Direction = x
         pars = [line.parameter(p) for p in pts]
-        # pars = [pow(p, 1.5) for p in pars]
-#		if pars[1] < pars[0]:
-#			pars = pars[::-1]
         print(pars)
-        bs = Part.BSplineCurve()
-        bs.interpolate(Points=pts, Parameters=pars, Tangents=tan, TangentFlags=flags)
-
+        # tan = [start_tan, Vec3(), x, Vec3()]
+        # flags = [True, False, True, False]
+        # bs = Part.BSplineCurve()
+        # bs.interpolate(Points=pts, Parameters=pars, Tangents=tan, TangentFlags=flags)
         reload(interpolation)
         pi = interpolation.PointInterpolation(pts)
         # pi.Periodic = True
         pi.Parameters = pars  # + [300]
         pi.Derivatives = [start_tan.normalize() * self.apex_strength, None, x.normalize(), None]
         bs = pi.interpolate(3)
-
-
-
         return bs

@@ -15,7 +15,8 @@ from ..lib.fpo import (print_err,
                        view_proxy,
                        PropertyLink,
                        PropertyLength,
-                       PropertyFloat)
+                       PropertyFloat,
+                       PropertyBool)
 from ..lib import seam_profile
 
 TOOL_ICON = os.path.join(Icon_Path, "Archtop_SeamProfile.svg")
@@ -55,6 +56,9 @@ class SeamProfileProxy:
     Apex_Strength = PropertyFloat(section="SeamProfile",
                                   default=1.5,
                                   description="Strength of the apex point")
+    Flat_Gutter = PropertyBool(section="SeamProfile",
+                               default=False,
+                               description="Flatten the gutter")
 
     # Ensure execution by the first time
     def on_create(self, obj):
@@ -77,5 +81,5 @@ class SeamProfileProxy:
         prof.apex_height = self.Apex_Height
         prof.apex_pos = self.Apex_Position
         prof.apex_strength = self.Apex_Strength
-        obj.Shape = prof.get_shape()
+        obj.Shape = prof.get_shape(self.Flat_Gutter)
 

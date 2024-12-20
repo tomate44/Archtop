@@ -33,6 +33,8 @@ class CmdSeamProfile:
         if hasattr(source, "GutterDepth"):
             fp.setExpression('TopGutterDepth', f'{source.Name}.GutterDepth')
             fp.setExpression('BottomGutterDepth', f'{source.Name}.GutterDepth')
+        if hasattr(source, "FlatGutter"):
+            fp.setExpression('FlatGutter', f'{source.Name}.FlatGutter')
 
     def Activated(self):
         sel = Gui.Selection.getSelection()
