@@ -74,5 +74,6 @@ class SeamProfile:
                 np = pl.projectPoint(p)
                 bs2.setPole(i + 1, np)
         bs1.join(bs2)
+        bs1.scaleKnotsToBounds(0.0, 100.0)
         return bs1.toShape()
 

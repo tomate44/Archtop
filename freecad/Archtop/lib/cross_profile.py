@@ -40,16 +40,24 @@ class CrossProfile:
         self.gutter_depth = 1.5
         self.apex_strength = 1.5
 
+    def get_contour_param(self):
+        y_pt = self.seam.Edge1.Curve.value(self.seam_param)
+        pl = Part.Plane(y_pt, Vec3(0, 1, 0))
+        x_pt = pl.intersect(self.contour.Edge1.Curve)[0][0].toShape().Point
+        return self.contour.Edge1.Curve.parameter(x_pt)
+
+    def get_seam_param(self):
+        x_pt = self.contour.Curve.value(self.contour_param)
+        pl = Part.Plane(x_pt, Vec3(0, 1, 0))
+        y_pt = pl.intersect(self.seam.Edge1.Curve)[0][0].toShape().Point
+        return self.seam.Edge1.Curve.parameter(y_pt)
+
     def get_shape(self, flat=False):
         x_pt = self.contour.Curve.value(self.contour_param)
         if self.seam_param is None:
-            pl = Part.Plane(x_pt, Vec3(0, 1, 0))
-            y_pt = pl.intersect(self.seam.Edge1.Curve)[0][0].toShape().Point
-            par = self.seam.Edge1.Curve.parameter(y_pt)
-            norm = self.seam.Edge1.normalAt(par)
-        else:
-            y_pt = self.seam.Edge1.Curve.value(self.seam_param)
-            norm = self.seam.Edge1.Curve.normal(self.seam_param)
+            self.seam_param = self.get_seam_param()
+        y_pt = self.seam.Edge1.Curve.value(self.seam_param)
+        norm = self.seam.Edge1.Curve.normal(self.seam_param)
         cs = ProfileCS(x_pt, y_pt, norm)
         print(cs)
         if not cs.isValid():

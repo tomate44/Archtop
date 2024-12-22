@@ -62,6 +62,33 @@ class CrossProfileProxy:
     def on_create(self, obj):
         pass  # self.on_execute(obj)
 
+    @Seam_Param.observer
+    def listener_seam_param(self, fp, new_value, old_value):
+        if fp.Horizontal is True:
+            prof = self.get_cross_profile()
+            self.Contour_Param = prof.get_contour_param()
+        self.on_execute(fp)
+
+    @Contour_Param.observer
+    def listener_contour_param(self, fp, new_value, old_value):
+        if fp.Horizontal is True:
+            prof = self.get_cross_profile()
+            self.Seam_Param = prof.get_seam_param()
+        self.on_execute(fp)
+
+    @Horizontal.observer
+    def listener_horizontal(self, fp, new_value, old_value):
+        if new_value is True:
+            if 0.0 < self.Seam_Param < 100.0:
+                fp.setEditorMode("ContourParam", 1)
+                self.listener_seam_param(fp, self.Seam_Param, self.Seam_Param)
+            elif 0.0 < self.Contour_Param < 100.0:
+                fp.setEditorMode("SeamParam", 1)
+                self.listener_contour_param(fp, self.Contour_Param, self.Contour_Param)
+        else:
+            fp.setEditorMode("ContourParam", 0)
+            fp.setEditorMode("SeamParam", 0)
+
     def on_change(self, fpo, prop, new_value, old_value):
         if prop in ("Contour",
                     "Seam",
@@ -69,8 +96,8 @@ class CrossProfileProxy:
                     "Seam_Param"):
             self.on_execute(fpo)
 
-    def on_execute(self, obj):
-        if not (obj.Contour and obj.Seam):
+    def get_cross_profile(self):
+        if not (self.Contour and self.Seam):
             return
         reload(cross_profile)
         contour = self.Contour[0].getSubObject(self.Contour[1])[0]
@@ -80,9 +107,10 @@ class CrossProfileProxy:
         seam = self.Seam.Shape
         if par2 == 0.0:
             par2 = None
-        prof = cross_profile.CrossProfile(contour, par1, seam, par2)
-        # prof.contour_param = self.Contour_Param
-        # prof.seam_param = self.Seam_Param
+        return cross_profile.CrossProfile(contour, par1, seam, par2)
+
+    def on_execute(self, obj):
+        prof = self.get_cross_profile()
         prof.gutter_width = self.Gutter_Width
         prof.gutter_depth = self.Gutter_Depth
         prof.apex_strength = self.Apex_Strength
