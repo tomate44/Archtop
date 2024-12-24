@@ -8,6 +8,7 @@ from . import interpolation
 class SeamProfile:
     def __init__(self, contour):
         self.contour = contour
+        self.seam = self.get_shape()
         self.top_gutter_width = 10.0
         self.top_gutter_depth = 0.2
         self.bottom_gutter_width = 30.0
@@ -15,6 +16,30 @@ class SeamProfile:
         self.apex_height = 20
         self.apex_pos = 0.6
         self.apex_strength = 1.5
+
+    def get_top_edge(self, param):
+        """
+        Return the top edge between between 0.0 and param
+        """
+        c1 = self.seam.Edge1.Curve
+        c1.segment(0.0, param)
+        return c1.toShape()
+
+    def get_middle_edge(self, par1, par2):
+        """
+        Return the middle edge between between par1 and par2
+        """
+        c1 = self.seam.Edge1.Curve
+        c1.segment(par1, par2)
+        return c1.toShape()
+
+    def get_bottom_edge(self, param):
+        """
+        Return the bottom edge between between param and 100.0
+        """
+        c1 = self.seam.Edge1.Curve
+        c1.segment(param, 100.0)
+        return c1.toShape()
 
     def get_shape(self, flat=False):
         top = self.contour.Vertex1.Point
@@ -75,5 +100,6 @@ class SeamProfile:
                 bs2.setPole(i + 1, np)
         bs1.join(bs2)
         bs1.scaleKnotsToBounds(0.0, 100.0)
-        return bs1.toShape()
+        self.seam = bs1.toShape()
+        return self.seam
 

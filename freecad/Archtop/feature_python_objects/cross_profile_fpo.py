@@ -20,6 +20,7 @@ from ..lib import cross_profile
 
 TOOL_ICON = os.path.join(Icon_Path, "Archtop_CrossProfile.svg")
 
+
 @view_proxy(icon=TOOL_ICON)
 class CrossProfileViewProxy:
     pass
@@ -98,7 +99,7 @@ class CrossProfileProxy:
 
     def get_cross_profile(self):
         if not (self.Contour and self.Seam):
-            return
+            return None
         reload(cross_profile)
         contour = self.Contour[0].getSubObject(self.Contour[1])[0]
         print(contour)
@@ -111,6 +112,8 @@ class CrossProfileProxy:
 
     def on_execute(self, obj):
         prof = self.get_cross_profile()
+        if prof is None:
+            return
         prof.gutter_width = self.Gutter_Width
         prof.gutter_depth = self.Gutter_Depth
         prof.apex_strength = self.Apex_Strength
