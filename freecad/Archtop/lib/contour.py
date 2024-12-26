@@ -87,12 +87,16 @@ class Contour:
         c1.segment(top, bottom)
         return c1.toShape()
 
-    def get_4_boundaries(self, topright, bottomright, topleft, bottomleft):
+    def get_4_boundaries(self, topright, bottomright, topleft=None, bottomleft=None):
         """
         Return the 4 boundary edges of the contour
         split at the supplied parameters
         Return list is [top, bottom, left, right]
         """
+        if topleft is None:
+            topleft = topright
+        if bottomleft is None:
+            bottomleft = bottomright
         top = self.get_top_edge(topleft, topright)
         bottom = self.get_bottom_edge(bottomleft, bottomright)
         left = self.get_left_edge(topleft, bottomleft)

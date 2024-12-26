@@ -8,7 +8,6 @@ from . import interpolation
 class SeamProfile:
     def __init__(self, contour):
         self.contour = contour
-        self.seam = self.get_shape()
         self.top_gutter_width = 10.0
         self.top_gutter_depth = 0.2
         self.bottom_gutter_width = 30.0
@@ -16,6 +15,7 @@ class SeamProfile:
         self.apex_height = 20
         self.apex_pos = 0.6
         self.apex_strength = 1.5
+        self.seam = self.get_shape()
 
     def get_top_edge(self, param):
         """
@@ -47,6 +47,7 @@ class SeamProfile:
         height = top.distanceToPoint(bottom)
         if top.y < bottom.y:
             top, bottom = bottom, top
+        print(dir(self))
         pts = [top]
         pts.append(top - Vec3(0.0, self.top_gutter_width / 2.0, self.top_gutter_depth))
         pts.append(top - Vec3(0.0, self.top_gutter_width, 0.0))

@@ -68,8 +68,8 @@ class SeamProfileProxy:
         if prop == "Contour":
             self.on_execute(fpo)
 
-    def on_execute(self, obj):
-        if not obj.Contour:
+    def get_seam(self):
+        if not self.Contour:
             return
         reload(seam_profile)
         contour = self.Contour.Shape
@@ -81,5 +81,9 @@ class SeamProfileProxy:
         prof.apex_height = self.Apex_Height
         prof.apex_pos = self.Apex_Position
         prof.apex_strength = self.Apex_Strength
-        obj.Shape = prof.get_shape(self.Flat_Gutter)
+        return prof
+
+    def on_execute(self, obj):
+        seam = self.get_seam()
+        obj.Shape = seam.get_shape(self.Flat_Gutter)
 

@@ -70,7 +70,7 @@ class ContourProxy:
         if prop == "Source":
             self.on_execute(fpo)
 
-    def get_contour_wire(self, obj):
+    def get_contour(self, obj):
         if not obj.Source:
             return
         shapes = []
@@ -78,7 +78,7 @@ class ContourProxy:
             shapes.append(o.Shape)
         reload(contour)
         body = contour.Contour(shapes)
-        return body.contour
+        return body
         # sorted_edges = Part.sortEdges(edges)
         # if len(sorted_edges) > 1:
         #     print_err("Edges don't form a closed contour")
@@ -90,4 +90,5 @@ class ContourProxy:
 
     # Update the shape
     def on_execute(self, obj):
-        obj.Shape = self.get_contour_wire(obj)
+        contour = self.get_contour(obj)
+        obj.Shape = contour.contour

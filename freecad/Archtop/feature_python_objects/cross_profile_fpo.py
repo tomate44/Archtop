@@ -108,13 +108,14 @@ class CrossProfileProxy:
         seam = self.Seam.Shape
         if par2 == 0.0:
             par2 = None
-        return cross_profile.CrossProfile(contour, par1, seam, par2)
+        prof = cross_profile.CrossProfile(contour, par1, seam, par2)
+        prof.gutter_width = self.Gutter_Width
+        prof.gutter_depth = self.Gutter_Depth
+        prof.apex_strength = self.Apex_Strength
+        return prof
 
     def on_execute(self, obj):
         prof = self.get_cross_profile()
         if prof is None:
             return
-        prof.gutter_width = self.Gutter_Width
-        prof.gutter_depth = self.Gutter_Depth
-        prof.apex_strength = self.Apex_Strength
         obj.Shape = prof.get_shape(self.Flat_Gutter)
