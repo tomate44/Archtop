@@ -15,7 +15,7 @@ from ..lib.fpo import (print_err,
                        proxy,
                        view_proxy,
                        PropertyLinkList,
-                       PropertyLength,
+                       PropertyInteger,
                        PropertyBool)
 from ..lib import archtop_surface
 
@@ -49,18 +49,18 @@ class ArchtopSurfaceViewProxy:
 class ArchtopSurfaceProxy:
     Profiles = PropertyLinkList(section="Source",
                                 description="Profiles of the archtop surface")
-    # Binding_Size = PropertyLength(section="Contour",
-    #                               default=3.0,
-    #                               description="Width of the binding")
+    NbExtraProfiles = PropertyInteger(section="Surface",
+                                     default=3,
+                                     description="Number of profiles sampled on top and bottom intermediate surfaces")
     # Gutter_Width = PropertyLength(section="Contour",
     #                               default=30.0,
     #                               description="Global width of the gutter")
     # Gutter_Depth = PropertyLength(section="Contour",
     #                               default=2.0,
     #                               description="Global depth of the gutter")
-    # Flat_Gutter = PropertyBool(section="Contour",
-    #                            default=False,
-    #                            description="Flatten the gutter")
+    Debug = PropertyBool(section="Debug",
+                         default=False,
+                         description="Output the temporary shapes")
 
     # Ensure execution by the first time
     def on_create(self, obj):
@@ -77,10 +77,10 @@ class ArchtopSurfaceProxy:
         for o in self.Profiles:
             objs.append(o.Proxy.get_cross_profile())
         reload(archtop_surface)
-        surf = archtop_surface.ArchtopSurface(objs)
+        surf = archtop_surface.ArchtopSurface(objs, self.NbExtraProfiles)
         return surf
 
     # Update the shape
     def on_execute(self, obj):
         surf = self.get_surface(obj)
-        obj.Shape = surf.get_shape()  # contour.contour
+        obj.Shape = surf.get_shape(self.Debug)  # contour.contour

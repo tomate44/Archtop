@@ -89,7 +89,7 @@ class CrossProfile:
         line = Part.Line()
         line.Location = cs.origin
         line.Direction = x
-        pars = [line.parameter(p) for p in pts]
+        pars = [1.0 * line.parameter(p) for p in pts]
         print(pars)
         # tan = [start_tan, Vec3(), x, Vec3()]
         # flags = [True, False, True, False]
@@ -99,6 +99,6 @@ class CrossProfile:
         pi = interpolation.PointInterpolation(pts)
         # pi.Periodic = True
         pi.Parameters = pars  # + [300]
-        pi.Derivatives = [start_tan.normalize() * self.apex_strength, None, x.normalize(), None]
+        pi.Derivatives = [start_tan.normalize() * self.apex_strength, None, x.normalize() / self.apex_strength, None]
         bs = pi.interpolate(3)
         return bs

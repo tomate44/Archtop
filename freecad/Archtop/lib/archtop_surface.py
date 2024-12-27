@@ -21,7 +21,7 @@ class ArchtopSurface:
     defined between a contour and a seam
     """
 
-    def __init__(self, profiles):
+    def __init__(self, profiles, num=5):
         self.profiles = profiles
         self.seam = profiles[0].seam
         edges = []
@@ -29,6 +29,7 @@ class ArchtopSurface:
             if not edge_in_list(prof.contour, edges):
                 edges.append(prof.contour)
         self.contour = contour.Contour(edges)
+        self.nb_extra_profiles = num
 
     def get_seam_params(self):
         params = [prof.seam_param for prof in self.profiles]
@@ -91,7 +92,8 @@ class ArchtopSurface:
         gordon = CTS.CurvesOn2Rails(prof, rails)
         return gordon.build_surface()
 
-    def flat_profiles(self, gordon, num=5):
+    def flat_profiles(self, gordon):
+        num = self.nb_extra_profiles
         minpar, maxpar = self.get_seam_params()
         minpt = self.seam.Edge1.valueAt(minpar)
         maxpt = self.seam.Edge1.valueAt(maxpar)
@@ -115,8 +117,11 @@ class ArchtopSurface:
             samp = c.discretize(num)[1:-1]
             for pt in samp:
                 line.Location = pt
-                inter = surf.intersect(line)[0][0]
-                pts.append(inter.toShape().Point)
+                try:
+                    inter = surf.intersect(line)[0][0]
+                    pts.append(inter.toShape().Point)
+                except IndexError:
+                    pass
             pts.append(c.value(c.LastParameter))
             bs = Part.BSplineCurve()
             bs.approximate(Points=pts, DegMin=3, DegMax=3, Tolerance=1e-3)
@@ -129,7 +134,7 @@ class ArchtopSurface:
         for prof in self.profiles:
             if ((prof.seam_param - minpar) > Tol3D) and ((maxpar - prof.seam_param) > Tol3D):
                 profs.append((prof.seam_param, prof.get_shape().Curve))
-        profs.sort(key=lambda x:x[0])
+        profs.sort(key=lambda x: x[0])
         print(profs)
         curves = []
         for i in range(0, len(profs), 2):
@@ -142,7 +147,7 @@ class ArchtopSurface:
             curves.append(c1)
         return curves
 
-    def get_shape(self):
+    def get_shape(self, debug=False):
         # Top and bottom Rotation Sweep faces
         rs1 = self.top_rot_sweep()
         rs2 = self.bottom_rot_sweep()
@@ -170,8 +175,10 @@ class ArchtopSurface:
         # s = final.surface()
         # Debug shapes
         sh = final.surface().toShape()
-        top_edges = [c.toShape() for c in top_profiles]
-        bot_edges = [c.toShape() for c in bot_profiles]
-        comp = Part.Compound([rs1, rs2, gordon] + top_edges + bot_edges + [sh])
+        if debug:
+            top_edges = [c.toShape() for c in top_profiles]
+            bot_edges = [c.toShape() for c in bot_profiles]
+            comp = Part.Compound([sh] + [rs1, rs2, gordon.toShape()] + top_edges + bot_edges)
+            return comp
         # Return shape
         return sh
