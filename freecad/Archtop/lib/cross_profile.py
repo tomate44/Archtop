@@ -99,6 +99,6 @@ class CrossProfile:
         pi = interpolation.PointInterpolation(pts)
         # pi.Periodic = True
         pi.Parameters = pars  # + [300]
-        pi.Derivatives = [start_tan.normalize() * self.apex_strength, None, x.normalize() / self.apex_strength, None]
+        pi.Derivatives = [start_tan.normalize() * self.apex_strength, None, x.normalize(), None]
         bs = pi.interpolate(3)
         return bs
